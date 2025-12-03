@@ -22,6 +22,12 @@ verification:
   type: python
   command: "python tests/verify_os_version.py"
   timeout: 30
+permissions:
+  mode: "dontAsk"  # Auto-approve all permissions
+  write: true      # Allow Write and Edit tools
+  bash: true       # Allow Bash tool
+  read: true       # Allow Read, Glob, Grep tools
+  web_fetch: false # Disallow WebFetch and WebSearch tools
 metadata:
   tags:
     - python

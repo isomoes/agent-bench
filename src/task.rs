@@ -66,6 +66,33 @@ pub struct VerificationConfig {
     pub timeout: u64,
 }
 
+/// Agent permissions configuration
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct PermissionsConfig {
+    /// Permission mode: "acceptEdits", "bypassPermissions", "default", "dontAsk", "plan"
+    /// - "bypassPermissions": Skip all permission checks
+    /// - "dontAsk": Auto-approve all permissions
+    /// - "default": Ask for each permission (default)
+    #[serde(default)]
+    pub mode: Option<String>,
+    /// Allow file write operations
+    #[serde(default)]
+    pub write: bool,
+    /// Allow file read operations (usually allowed by default)
+    #[serde(default = "default_true")]
+    pub read: bool,
+    /// Allow bash command execution
+    #[serde(default)]
+    pub bash: bool,
+    /// Allow web fetch operations
+    #[serde(default)]
+    pub web_fetch: bool,
+}
+
+fn default_true() -> bool {
+    true
+}
+
 fn default_timeout() -> u64 {
     60
 }
@@ -98,6 +125,9 @@ pub struct Task {
     pub prompt: String,
     /// Verification configuration
     pub verification: VerificationConfig,
+    /// Agent permissions configuration
+    #[serde(default)]
+    pub permissions: PermissionsConfig,
     /// Optional metadata
     #[serde(default)]
     pub metadata: TaskMetadata,
@@ -225,6 +255,7 @@ mod tests {
                 command: "pytest tests/".to_string(),
                 timeout: 60,
             },
+            permissions: PermissionsConfig::default(),
             metadata: TaskMetadata::default(),
         };
 
@@ -248,6 +279,7 @@ mod tests {
                 command: "pytest tests/".to_string(),
                 timeout: 60,
             },
+            permissions: PermissionsConfig::default(),
             metadata: TaskMetadata::default(),
         };
 

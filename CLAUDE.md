@@ -65,7 +65,42 @@ Tasks are defined in YAML with the following structure:
 - `source`: Repository URL and commit hash
 - `prompt`: Task instructions for the agent
 - `verification`: Test command and timeout
+- `permissions`: Agent permissions configuration (optional)
+  - `mode`: Permission mode - "dontAsk" (auto-approve), "bypassPermissions" (skip checks), "default" (ask each time)
+  - `write`: Allow Write and Edit tools (default: false)
+  - `read`: Allow Read, Glob, and Grep tools (default: true)
+  - `bash`: Allow Bash tool (default: false)
+  - `web_fetch`: Allow WebFetch and WebSearch tools (default: false)
 - `metadata`: Tags for categorization
+
+### Example Task with Permissions
+
+```yaml
+id: TOOLS-001
+title: "Find system OS version"
+category: tools
+difficulty: easy
+source:
+  repository: https://github.com/jiahaoxiang2000/agent-bench.git
+  commit: "main"
+prompt: |
+  Use system tools to find the operating system version and save the result.
+  Write the OS version to a file: results/os_version.txt
+verification:
+  type: python
+  command: "python tests/verify_os_version.py"
+  timeout: 30
+permissions:
+  mode: "dontAsk"  # Auto-approve all permissions
+  write: true      # Allow Write and Edit tools
+  bash: true       # Allow Bash tool
+  read: true       # Allow Read, Glob, Grep tools
+  web_fetch: false # Disallow WebFetch and WebSearch tools
+metadata:
+  tags:
+    - system-info
+    - tools
+```
 
 ## Architecture
 

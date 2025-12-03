@@ -11,6 +11,9 @@ use cli::{Cli, Commands};
 
 #[tokio::main]
 async fn main() {
+    // Initialize logger (RUST_LOG=debug for verbose output)
+    env_logger::init();
+
     let cli = Cli::parse();
 
     let result = match &cli.command {
