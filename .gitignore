@@ -1,92 +1,21 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
+# Rust build artifacts
+/target/
 
-# C extensions
-*.so
+# Rust incremental compilation
+**/*.rs.bk
+*.pdb
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Translations
-*.mo
-*.pot
-
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
-
-# IDEs and editors
+# IDE and editors
 .idea/
 .vscode/
 *.swp
 *.swo
 *~
 .project
-.pydevproject
 .settings/
 *.sublime-project
 *.sublime-workspace
-
-# Jupyter Notebook
-.ipynb_checkpoints
-
-# pyenv
-.python-version
-
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre
-.pyre/
-
-# Docker
-.docker/
+*.iml
 
 # Agent Bench specific
 results/
@@ -104,8 +33,21 @@ results/
 ehthumbs.db
 Thumbs.db
 
+# Environment files
+.env
+.env.*
+
 # Secrets and credentials
 *.pem
 *.key
 .secrets/
 credentials.json
+
+# Coverage and profiling
+*.profraw
+*.profdata
+coverage/
+lcov.info
+
+# Documentation build artifacts
+/target/doc/

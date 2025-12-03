@@ -1,0 +1,30 @@
+id: TOOLS-001
+title: "Find system OS version"
+category: tools
+difficulty: easy
+source:
+  repository: https://github.com/jiahaoxiang2000/agent-bench.git
+  commit: "main"
+prompt: |
+  Use system tools to find the operating system version and save the result.
+
+  Your task:
+  1. Use appropriate system commands to detect the OS version
+  2. Write the OS version to a file: results/os_version.txt
+
+  The file should contain just the OS version string, for example:
+    - Linux: "Linux 6.17.8-arch1-1"
+    - macOS: "macOS 14.1.1"
+    - Windows: "Windows 11 22H2"
+
+  Use tools like uname, lsb_release, /etc/os-release, or platform-specific commands.
+verification:
+  type: python
+  command: "python tests/verify_os_version.py"
+  timeout: 30
+metadata:
+  tags:
+    - python
+    - system-info
+    - tools
+    - beginner

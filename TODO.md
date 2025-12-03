@@ -5,11 +5,11 @@ Project roadmap and task tracking for Agent Bench.
 ## MVP (Current Phase)
 
 - [x] Project setup
-- [ ] Task loader and validator
-- [ ] Single agent adapter (Claude)
-- [ ] Basic runner (local execution)
-- [ ] Test-based verification
-- [ ] JSON results output
+- [x] Task loader and validator
+- [x] Single agent adapter (Claude)
+- [x] Basic runner (local execution)
+- [x] Test-based verification
+- [x] JSON results output
 
 ## Phase 2
 
