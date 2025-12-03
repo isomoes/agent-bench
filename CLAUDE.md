@@ -8,20 +8,24 @@ Agent Bench is an open-source benchmark for evaluating AI coding agents on real-
 
 ## Tech Stack
 
-- **Language**: Rust 1.75+
-- **Build System**: Cargo
+- **Language**: Python 3.11+
+- **Package Manager**: uv (fast Python package installer and resolver)
+- **Build System**: pyproject.toml
 
 ## Build Commands
 
 ```bash
-# Build the project
-cargo build --release
+# Install dependencies
+uv sync
+
+# Run the CLI
+uv run agent-bench <command>
 
 # Run tests
-cargo test
+uv run pytest
 
 # Run with debug output
-cargo run -- <command>
+uv run agent-bench --debug <command>
 ```
 
 ## Project Structure
@@ -29,17 +33,20 @@ cargo run -- <command>
 ```
 agent-bench/
 ├── src/
-│   ├── main.rs             # Entry point
-│   ├── cli.rs              # Command-line interface
-│   ├── task.rs             # Task model and loader
-│   ├── runner.rs           # Task execution
-│   ├── agents/             # Agent adapters
-│   │   ├── mod.rs
-│   │   └── claude.rs
-│   └── evaluator.rs        # Result verification
+│   └── agent_bench/
+│       ├── __init__.py
+│       ├── cli.py          # Command-line interface
+│       ├── task.py         # Task model and loader
+│       ├── runner.py       # Task execution
+│       ├── agents/         # Agent adapters
+│       │   ├── __init__.py
+│       │   └── claude.py
+│       └── evaluator.py    # Result verification
 ├── tasks/                  # Benchmark tasks (YAML format)
 │   └── examples/
-└── results/                # Run outputs
+├── results/                # Run outputs
+├── pyproject.toml          # Project configuration and dependencies
+└── uv.lock                 # Locked dependency versions
 ```
 
 ## CLI Usage
