@@ -7,6 +7,7 @@ from pathlib import Path
 import click
 
 from .agents import AgentType
+from .collect_results import collect_results, write_csv
 from .runner import RunnerConfig, TaskRunner
 
 
@@ -120,6 +121,32 @@ def run(ctx: click.Context, task: str, suite: str, agent: str):
         click.echo("\nUsage:")
         click.echo("  agent-bench run --task <TASK_ID> --agent <AGENT>")
         click.echo("  agent-bench run --suite all --agent <AGENT>")
+
+
+@cli.command()
+@click.option("-o", "--output", default=None, help="Output CSV file path (default: results/summary.csv)")
+@click.pass_context
+def collect(ctx: click.Context, output: str):
+    """Collect all benchmark results into a single CSV file."""
+    config: RunnerConfig = ctx.obj
+
+    # Determine output path
+    if output:
+        output_path = Path(output)
+    else:
+        output_path = config.results_dir / "summary.csv"
+
+    click.echo(f"Collecting results from {config.results_dir}...")
+    results = collect_results(config.results_dir)
+
+    if not results:
+        click.echo("No results found.")
+        return
+
+    click.echo(f"Found {len(results)} result files")
+
+    write_csv(results, output_path)
+    click.echo(f"\n✓ Results summary available at: {output_path}")
 
 
 def main():

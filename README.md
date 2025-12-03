@@ -16,7 +16,8 @@ Agent Bench creates reproducible evaluation environments derived from authentic 
 
 ### Prerequisites
 
-- Rust 1.75+
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/) (fast Python package installer)
 - Git
 
 ### Installation
@@ -24,20 +25,26 @@ Agent Bench creates reproducible evaluation environments derived from authentic 
 ```bash
 git clone https://github.com/jiahaoxiang2000/agent-bench.git
 cd agent-bench
-cargo build --release
+
+# Install dependencies
+uv sync
 ```
 
 ### Usage
 
 ```bash
 # List available tasks
-agent-bench list
+uv run agent-bench list
 
 # Run a specific task
-agent-bench run --task <task-id> --agent <agent-name>
+uv run agent-bench run --task <task-id> --agent <agent-name>
 
 # Run full benchmark suite
-agent-bench run --suite all --agent <agent-name>
+uv run agent-bench run --suite all --agent <agent-name>
+
+# Collect results into CSV
+uv run agent-bench collect                    # Creates results/summary.csv
+uv run agent-bench collect -o output.csv      # Custom output path
 ```
 
 ## Task Format
@@ -70,17 +77,21 @@ metadata:
 ```
 agent-bench/
 ├── src/
-│   ├── main.rs             # Entry point
-│   ├── cli.rs              # Command-line interface
-│   ├── task.rs             # Task model and loader
-│   ├── runner.rs           # Task execution
-│   ├── agents/             # Agent adapters
-│   │   ├── mod.rs
-│   │   └── claude.rs
-│   └── evaluator.rs        # Result verification
-├── tasks/                  # Benchmark tasks
+│   └── agent_bench/
+│       ├── __init__.py
+│       ├── cli.py              # Command-line interface
+│       ├── task.py             # Task model and loader
+│       ├── runner.py           # Task execution
+│       ├── collect_results.py  # Results aggregation
+│       ├── agents/             # Agent adapters
+│       │   ├── __init__.py
+│       │   └── claude.py
+│       └── evaluator.py        # Result verification
+├── tasks/                      # Benchmark tasks (YAML format)
 │   └── examples/
-└── results/                # Run outputs
+├── results/                    # Run outputs (JSON + CSV)
+├── pyproject.toml              # Project configuration
+└── uv.lock                     # Locked dependencies
 ```
 
 ## Architecture (MVP)
@@ -116,9 +127,28 @@ flowchart LR
 | Metric       | Description               |
 | ------------ | ------------------------- |
 | Success Rate | Tasks completed correctly |
+| Score        | 0-100 quality score       |
 | Iterations   | Attempts before success   |
 | Token Usage  | Tokens consumed           |
 | Duration     | Time to completion        |
+
+## Results Analysis
+
+After running benchmarks, use the `collect` command to generate a CSV summary:
+
+```bash
+# Generate CSV from all JSON results
+uv run agent-bench collect
+
+# View results in terminal
+column -t -s, results/summary.csv
+
+# Open in spreadsheet software
+open results/summary.csv  # macOS
+xdg-open results/summary.csv  # Linux
+```
+
+The CSV includes: task_id, agent, timestamp, success, score, iterations, duration, tokens, and errors.
 
 ## Contributing Tasks
 

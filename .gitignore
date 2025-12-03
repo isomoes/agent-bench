@@ -46,7 +46,7 @@ env/
 dmypy.json
 
 # Agent Bench specific
-results/
+results/*.json
 *.log
 *.tmp
 .benchmarks/

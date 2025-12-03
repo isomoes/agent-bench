@@ -38,6 +38,7 @@ agent-bench/
 │       ├── cli.py          # Command-line interface
 │       ├── task.py         # Task model and loader
 │       ├── runner.py       # Task execution
+│       ├── collect_results.py  # Results aggregation
 │       ├── agents/         # Agent adapters
 │       │   ├── __init__.py
 │       │   └── claude.py
@@ -60,6 +61,10 @@ agent-bench run --task <task-id> --agent <agent-name>
 
 # Run full benchmark suite
 agent-bench run --suite all --agent <agent-name>
+
+# Collect results into CSV
+agent-bench collect                    # Creates results/summary.csv
+agent-bench collect -o output.csv      # Custom output path
 ```
 
 ## Task Format
