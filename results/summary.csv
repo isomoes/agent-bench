@@ -1,2 +1,5 @@
 task_id,agent,timestamp,success,score,iterations,duration_secs,tokens_used,error
+TOOLS-001,claude-bigmodel,2025-12-03T12:38:45.559533Z,True,100,1,76.88,,
+TOOLS-001,claude-deepseek,2025-12-03T12:36:53.177710Z,True,100,1,162.39,,
+TOOLS-001,claude-kimi,2025-12-03T12:46:20.084762Z,True,100,1,107.59,,
 TOOLS-001,claude,2025-12-03T12:02:52.179280Z,True,100,1,40.54,,

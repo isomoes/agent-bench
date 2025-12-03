@@ -45,6 +45,25 @@ uv run agent-bench run --suite all --agent <agent-name>
 # Collect results into CSV
 uv run agent-bench collect                    # Creates results/summary.csv
 uv run agent-bench collect -o output.csv      # Custom output path
+
+# Run with alternative API backends
+uv run agent-bench run --task <task-id> --agent claude-deepseek
+uv run agent-bench run --task <task-id> --agent claude-kimi
+uv run agent-bench run --task <task-id> --agent claude-bigmodel
+```
+
+### Supported Agents
+
+- **claude** - Standard Claude Code CLI
+- **claude-deepseek** - Claude CLI with DeepSeek API backend
+- **claude-kimi** - Claude CLI with Kimi (Moonshot) API backend
+- **claude-bigmodel** - Claude CLI with BigModel API backend
+
+**Note**: Alternative agents require corresponding shell aliases. For example:
+
+```bash
+# Add to ~/.bashrc or ~/.zshrc
+alias claude-deepseek='source ~/.token && ANTHROPIC_AUTH_TOKEN=$DEEPSEEK_AUTH_TOKEN ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic" ANTHROPIC_MODEL="deepseek-chat" ANTHROPIC_SMALL_FAST_MODEL="deepseek-chat" /path/to/claude'
 ```
 
 ## Task Format

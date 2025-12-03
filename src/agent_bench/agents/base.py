@@ -37,6 +37,9 @@ class AgentType(str, Enum):
     """Available agent types."""
 
     CLAUDE = "claude"
+    CLAUDE_DEEPSEEK = "claude-deepseek"
+    CLAUDE_KIMI = "claude-kimi"
+    CLAUDE_BIGMODEL = "claude-bigmodel"
 
 
 def create_agent(agent_type: AgentType) -> Agent:
@@ -44,6 +47,12 @@ def create_agent(agent_type: AgentType) -> Agent:
     from .claude import ClaudeAgent
 
     if agent_type == AgentType.CLAUDE:
-        return ClaudeAgent()
+        return ClaudeAgent(cli_command="claude")
+    elif agent_type == AgentType.CLAUDE_DEEPSEEK:
+        return ClaudeAgent(cli_command="claude-deepseek", display_name="claude-deepseek")
+    elif agent_type == AgentType.CLAUDE_KIMI:
+        return ClaudeAgent(cli_command="claude-kimi", display_name="claude-kimi")
+    elif agent_type == AgentType.CLAUDE_BIGMODEL:
+        return ClaudeAgent(cli_command="claude-bigmodel", display_name="claude-bigmodel")
     else:
         raise ValueError(f"Unknown agent type: {agent_type}")

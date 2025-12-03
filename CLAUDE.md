@@ -70,6 +70,7 @@ agent-bench collect -o output.csv      # Custom output path
 ## Task Format
 
 Tasks are defined in YAML with the following structure:
+
 - `id`: Unique identifier (e.g., BUG-001)
 - `title`: Brief description
 - `category`: Task type (bug-fix, feature, refactor)
@@ -103,10 +104,10 @@ verification:
   command: "python tests/verify_os_version.py"
   timeout: 30
 permissions:
-  mode: "dontAsk"  # Auto-approve all permissions
-  write: true      # Allow Write and Edit tools
-  bash: true       # Allow Bash tool
-  read: true       # Allow Read, Glob, Grep tools
+  mode: "dontAsk" # Auto-approve all permissions
+  write: true # Allow Write and Edit tools
+  bash: true # Allow Bash tool
+  read: true # Allow Read, Glob, Grep tools
   web_fetch: false # Disallow WebFetch and WebSearch tools
 metadata:
   tags:
@@ -130,6 +131,7 @@ CLI → Core (Task Loader, Runner) → Agent Adapter → Evaluator (Verifier, Re
 ## Development Status
 
 MVP phase focusing on:
+
 - Task loader and validator
 - Single agent adapter (Claude)
 - Basic runner (local execution)

@@ -15,12 +15,14 @@ logger = logging.getLogger(__name__)
 class ClaudeAgent(Agent):
     """Claude Code CLI agent adapter."""
 
-    def __init__(self, max_iterations: int = 1):
+    def __init__(self, max_iterations: int = 1, cli_command: str = "claude", display_name: str = "claude"):
         self.max_iterations = max_iterations
+        self.cli_command = cli_command
+        self.display_name = display_name
 
     def name(self) -> str:
         """Get the agent's name."""
-        return "claude"
+        return self.display_name
 
     async def execute(self, task: Task, workspace: Path) -> AgentResult:
         """Execute a task in the given workspace."""
@@ -31,15 +33,15 @@ class ClaudeAgent(Agent):
         if self.max_iterations == 1:
             iterations = 1
 
-            cmd = ["claude"]
+            cmd = [self.cli_command]
             self._apply_permissions(cmd, task)
             cmd.extend(["-p", task.prompt])
 
             perm_flags = self._get_permission_flags(task)
             command_str = (
-                f"claude {perm_flags} -p '{task.prompt}'"
+                f"{self.cli_command} {perm_flags} -p '{task.prompt}'"
                 if perm_flags
-                else f"claude -p '{task.prompt}'"
+                else f"{self.cli_command} -p '{task.prompt}'"
             )
 
             logger.debug(f"Executing: {command_str}")
@@ -82,31 +84,31 @@ class ClaudeAgent(Agent):
                 )
 
             except asyncio.TimeoutError:
-                raise AgentError("Claude CLI command timed out after 300 seconds")
+                raise AgentError(f"{self.cli_command} command timed out after 300 seconds")
             except Exception as e:
-                raise AgentError(f"Failed to execute claude CLI: {e}")
+                raise AgentError(f"Failed to execute {self.cli_command}: {e}")
 
         # For multiple iterations, use conversational mode with --continue
         for i in range(self.max_iterations):
             iterations += 1
 
-            cmd = ["claude"]
+            cmd = [self.cli_command]
             self._apply_permissions(cmd, task)
 
             if i == 0:
                 prompt_content = task.prompt
                 perm_flags = self._get_permission_flags(task)
                 command_str = (
-                    f"claude {perm_flags} -p <prompt>" if perm_flags else "claude -p <prompt>"
+                    f"{self.cli_command} {perm_flags} -p <prompt>" if perm_flags else f"{self.cli_command} -p <prompt>"
                 )
             else:
                 cmd.append("--continue")
                 prompt_content = "Please continue with the task. Check if verification passes. If there are errors, fix them and retry."
                 perm_flags = self._get_permission_flags(task)
                 command_str = (
-                    f"claude {perm_flags} --continue -p <prompt>"
+                    f"{self.cli_command} {perm_flags} --continue -p <prompt>"
                     if perm_flags
-                    else "claude --continue -p <prompt>"
+                    else f"{self.cli_command} --continue -p <prompt>"
                 )
 
             cmd.extend(["-p", prompt_content])
@@ -156,7 +158,7 @@ class ClaudeAgent(Agent):
                     await asyncio.sleep(2)
 
             except Exception as e:
-                raise AgentError(f"Failed to execute claude CLI (iteration {i + 1}): {e}")
+                raise AgentError(f"Failed to execute {self.cli_command} (iteration {i + 1}): {e}")
 
         return AgentResult(
             success=False,
