@@ -84,6 +84,7 @@ Tasks are defined in YAML with the following structure:
   - `read`: Allow Read, Glob, and Grep tools (default: true)
   - `bash`: Allow Bash tool (default: false)
   - `web_fetch`: Allow WebFetch and WebSearch tools (default: false)
+- `max_iterations`: Maximum number of agent turns/iterations (optional, defaults to 20)
 - `metadata`: Tags for categorization
 
 ### Example Task with Permissions
@@ -109,6 +110,7 @@ permissions:
   bash: true # Allow Bash tool
   read: true # Allow Read, Glob, Grep tools
   web_fetch: false # Disallow WebFetch and WebSearch tools
+max_iterations: 10 # Optional: limit agent to 10 turns (defaults to 20)
 metadata:
   tags:
     - system-info
@@ -127,17 +129,3 @@ CLI → Core (Task Loader, Runner) → Agent Adapter → Evaluator (Verifier, Re
 - **Iterations**: Attempts before success
 - **Token Usage**: Tokens consumed
 - **Duration**: Time to completion
-
-## Development Status
-
-MVP phase focusing on:
-
-- Task loader and validator
-- Single agent adapter (Claude)
-- Basic runner (local execution)
-- Test-based verification
-- JSON results output
-
-## Important Reminders
-
-- **When completing a TODO item**: Update `TODO.md` to mark the item as done by changing `- [ ]` to `- [x]`

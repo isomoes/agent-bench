@@ -59,12 +59,15 @@ class ClaudeSDKAgent(Agent):
             # Build allowed tools list from task permissions
             allowed_tools = self._build_allowed_tools(task)
 
+            # Use task's max_iterations if specified, otherwise use agent default
+            max_turns = task.max_iterations if task.max_iterations is not None else self.max_iterations
+
             # Create SDK options
             options = ClaudeAgentOptions(
                 allowed_tools=allowed_tools,
                 permission_mode="bypassPermissions",  # Auto-approve for benchmarking
                 cwd=workspace,
-                max_turns=self.max_iterations,
+                max_turns=max_turns,
                 model=self.model or self._model_name,
                 include_partial_messages=False,
                 system_prompt=f"You are working in the directory: {workspace}\n"

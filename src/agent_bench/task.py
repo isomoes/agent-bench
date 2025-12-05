@@ -70,6 +70,7 @@ class Task(BaseModel):
     verification: VerificationConfig
     permissions: PermissionsConfig = Field(default_factory=PermissionsConfig)
     metadata: TaskMetadata = Field(default_factory=TaskMetadata)
+    max_iterations: Optional[int] = None
 
     @field_validator("id")
     @classmethod
