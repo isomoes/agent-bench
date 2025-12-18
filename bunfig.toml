@@ -1,0 +1,7 @@
+[install]
+# Use exact versions for reproducible builds
+exact = true
+
+[install.scopes]
+# Trust OpenCode SDK
+"@opencode-ai" = { url = "https://registry.npmjs.org/" }

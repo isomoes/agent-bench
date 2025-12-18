@@ -8,24 +8,28 @@ Agent Bench is an open-source benchmark for evaluating AI coding agents on real-
 
 ## Tech Stack
 
-- **Language**: Python 3.11+
-- **Package Manager**: uv (fast Python package installer and resolver)
-- **Build System**: pyproject.toml
+- **Language**: TypeScript
+- **Runtime**: Bun (fast JavaScript runtime)
+- **Agent SDK**: OpenCode SDK (@opencode-ai/sdk)
+- **CLI Framework**: Commander.js
 
 ## Build Commands
 
 ```bash
 # Install dependencies
-uv sync
+bun install
 
-# Run the CLI
-uv run agent-bench <command>
+# Run the CLI (development)
+bun run src/index.ts <command>
 
-# Run tests
-uv run pytest
+# Build for production
+bun run build
+
+# Type check
+bun run typecheck
 
 # Run with debug output
-uv run agent-bench --debug <command>
+bun run src/index.ts --debug <command>
 ```
 
 ## Project Structure
@@ -33,38 +37,68 @@ uv run agent-bench --debug <command>
 ```
 agent-bench/
 ├── src/
-│   └── agent_bench/
-│       ├── __init__.py
-│       ├── cli.py          # Command-line interface
-│       ├── task.py         # Task model and loader
-│       ├── runner.py       # Task execution
-│       ├── collect_results.py  # Results aggregation
-│       ├── agents/         # Agent adapters
-│       │   ├── __init__.py
-│       │   └── claude.py
-│       └── evaluator.py    # Result verification
+│   ├── index.ts           # CLI entry point
+│   ├── cli/
+│   │   ├── index.ts       # Commander.js setup
+│   │   └── commands/      # CLI commands
+│   │       ├── list.ts    # List tasks
+│   │       ├── run.ts     # Run tasks
+│   │       ├── collect.ts # Collect results
+│   │       ├── verify.ts  # Manual verification
+│   │       └── init.ts    # Initialize config
+│   ├── core/
+│   │   ├── task.ts        # Task models (Zod schemas)
+│   │   ├── loader.ts      # YAML task loader
+│   │   ├── runner.ts      # Task execution orchestrator
+│   │   ├── workspace.ts   # Git workspace management
+│   │   └── config.ts      # Configuration management
+│   ├── agents/
+│   │   ├── types.ts       # Agent interfaces
+│   │   ├── opencode.ts    # OpenCode SDK adapter
+│   │   └── factory.ts     # Agent factory
+│   ├── evaluator/
+│   │   ├── verifier.ts    # Subprocess verification
+│   │   └── results.ts     # Result models + persistence
+│   ├── collectors/
+│   │   └── csv.ts         # JSON → CSV aggregation
+│   └── utils/
+│       ├── logger.ts      # Colored logging
+│       └── errors.ts      # Custom error classes
 ├── tasks/                  # Benchmark tasks (YAML format)
-│   └── examples/
-├── results/                # Run outputs
-├── pyproject.toml          # Project configuration and dependencies
-└── uv.lock                 # Locked dependency versions
+├── results/                # Run outputs (JSON + CSV)
+├── package.json            # Dependencies and scripts
+├── tsconfig.json           # TypeScript configuration
+└── bunfig.toml             # Bun configuration
 ```
 
 ## CLI Usage
 
 ```bash
 # List available tasks
-agent-bench list
+bun run src/index.ts list
+bun run src/index.ts list --category bug-fix        # Filter by category
+bun run src/index.ts list --difficulty easy         # Filter by difficulty
+bun run src/index.ts list --tags tools,python       # Filter by tags
+bun run src/index.ts list --verbose                 # Show full details
 
 # Run a specific task
-agent-bench run --task <task-id> --agent <agent-name>
+bun run src/index.ts run -t <task-id>
+bun run src/index.ts run -t TOOLS-001 -m anthropic/claude-opus-4
 
-# Run full benchmark suite
-agent-bench run --suite all --agent <agent-name>
+# Run task suites
+bun run src/index.ts run -s all                     # Run all tasks
+bun run src/index.ts run -s bug-fix                 # Run category
+bun run src/index.ts run -t TOOLS-001 --no-verify  # Skip verification
 
 # Collect results into CSV
-agent-bench collect                    # Creates results/summary.csv
-agent-bench collect -o output.csv      # Custom output path
+bun run src/index.ts collect                        # Creates results/summary.csv
+bun run src/index.ts collect -o output.csv          # Custom output path
+
+# Manual verification
+bun run src/index.ts verify -t TOOLS-001 -w /path/to/workspace
+
+# Initialize configuration
+bun run src/index.ts init --default-model anthropic/claude-sonnet-4-5
 ```
 
 ## Task Format
@@ -120,8 +154,20 @@ metadata:
 ## Architecture
 
 ```
-CLI → Core (Task Loader, Runner) → Agent Adapter → Evaluator (Verifier, Results)
+CLI (Commander.js) → Runner → OpenCode Agent → OpenCode SDK → Verifier → Results (JSON/CSV)
+  ↓                     ↓                           ↓
+TaskLoader       WorkspaceManager           SSE Event Stream
+  ↓                     ↓                           ↓
+Zod Validation    Git Operations            Metrics Collection
 ```
+
+**Key Components:**
+- **CLI**: Commander.js-based interface with enhanced filtering and options
+- **TaskLoader**: YAML parsing with Zod runtime validation
+- **WorkspaceManager**: Git repository cloning and workspace isolation
+- **OpenCodeAgent**: OpenCode SDK adapter with SSE event streaming for metrics
+- **Verifier**: Subprocess-based verification with timeout handling
+- **Results**: JSON + CSV output with benchmark metrics
 
 ## Key Metrics
 
