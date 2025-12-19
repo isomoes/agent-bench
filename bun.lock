@@ -27,7 +27,7 @@
 
     "@kwsites/promise-deferred": ["@kwsites/promise-deferred@1.1.1", "https://registry.npmmirror.com/@kwsites/promise-deferred/-/promise-deferred-1.1.1.tgz", {}, "sha512-GaHYm+c0O9MjZRu0ongGBRbinu8gVAMd2UZjji6jVmqKtZluZnptXGWhz1E8j8D2HJ3f/yMxKAUC0b+57wncIw=="],
 
-    "@opencode-ai/sdk": ["@opencode-ai/sdk@1.0.166", "", {}, "sha512-9ngA6vHqu4V8EVsJOt3PWDcg/NuaTSm3hadXNhTMZsPWxBkup6nu1SPGrwO6pnEep9BOiZBbkDu0axc10bk9GA=="],
+    "@opencode-ai/sdk": ["@opencode-ai/sdk@1.0.169", "", {}, "sha512-c9XyrvQlZOQ+WxtD3io+VKkwhH1g82e9eNgczpXe3h+rkt5LANFgiwCGSHVArD0p/5FiPQPUEGk7mwqAjGL/GQ=="],
 
     "@types/js-yaml": ["@types/js-yaml@4.0.9", "https://registry.npmmirror.com/@types/js-yaml/-/js-yaml-4.0.9.tgz", {}, "sha512-k4MGaQl5TGo/iipqb2UDG2UwjXziSWkh0uysQelTlJpX1qGlpUZYm8PnO4DxG1qBomtJUdYJ6qR6xdIah10JLg=="],
 
