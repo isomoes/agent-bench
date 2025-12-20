@@ -1,10 +1,7 @@
 task_id,agent,agent_version,model_name,timestamp,success,score,iterations,duration_secs,tokens_used,error
-TOOLS-001,claude-bigmodel,claude-agent-sdk 0.1.12,glm-4.6,2025-12-05T08:47:12.986045Z,True,100,7,34.43,1125,
-TOOLS-001,claude-deepseek,claude-agent-sdk 0.1.12,deepseek-chat,2025-12-05T08:35:29.216437Z,True,100,11,63.04,14512,
-TOOLS-001,claude-kimi,claude-agent-sdk 0.1.12,kimi-k2-turbo-preview,2025-12-05T08:48:16.698797Z,True,100,7,22.26,47111,
-TOOLS-001,claude,claude-agent-sdk 0.1.12,claude-sonnet-4-5,2025-12-05T08:45:05.080952Z,True,100,6,336.78,142,
 TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,zhipuai-coding-plan/glm-4.6,2025-12-20T14:18:15.287Z,1,100,6,33.97,26347,
 TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,mimo/mimo-v2-flash,2025-12-20T14:22:06.729Z,1,100,5,18.45,57795,
 TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,deepseek/deepseek-chat,2025-12-20T14:26:33.482Z,1,100,7,30.65,22021,
 TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,alibaba-cn/qwen3-coder-plus,2025-12-20T14:28:30.610Z,1,100,6,15.60,24832,
 TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,moonshotai-cn/kimi-k2-thinking-turbo,2025-12-20T14:30:05.821Z,1,100,4,18.11,42702,
+TOOLS-001,opencode,@opencode-ai/sdk@1.0.169,anthropic/claude-sonnet-4-5,2025-12-20T14:34:10.901Z,1,100,5,29.07,683,
