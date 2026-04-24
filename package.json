@@ -14,7 +14,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@opencode-ai/sdk": "1.2.6",
+    "@opencode-ai/sdk": "1.14.22",
     "commander": "12.1.0",
     "js-yaml": "4.1.1",
     "zod": "3.25.76",

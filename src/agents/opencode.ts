@@ -2,8 +2,9 @@
  * OpenCode SDK agent adapter.
  */
 
-import { createOpencode } from "@opencode-ai/sdk";
+import { createOpencodeClient, createOpencodeServer } from "@opencode-ai/sdk";
 import type { OpencodeClient } from "@opencode-ai/sdk";
+import { Buffer } from "node:buffer";
 import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
@@ -31,6 +32,24 @@ function getOpencodeVersion(): string {
     console.warn(`Failed to read OpenCode SDK version: ${error}`);
   }
   return "@opencode-ai/sdk@unknown";
+}
+
+/**
+ * Build auth headers for an embedded OpenCode server when server auth is enabled.
+ *
+ * @returns Headers required by the OpenCode server, or undefined when auth is disabled.
+ */
+function getOpencodeServerAuthHeaders(): Record<string, string> | undefined {
+  const password = process.env.OPENCODE_SERVER_PASSWORD;
+  if (!password) {
+    return undefined;
+  }
+
+  const username = process.env.OPENCODE_SERVER_USERNAME ?? "opencode";
+  const token = Buffer.from(`${username}:${password}`).toString("base64");
+  return {
+    Authorization: `Basic ${token}`,
+  };
 }
 
 /**
@@ -68,8 +87,12 @@ export class OpencodeAgent implements Agent {
     );
 
     // Start embedded OpenCode server for this task
-    const { server, client } = await createOpencode({
+    const server = await createOpencodeServer({
       port: 0, // Auto-assign port
+    });
+    const client = createOpencodeClient({
+      baseUrl: server.url,
+      headers: getOpencodeServerAuthHeaders(),
     });
 
     try {
