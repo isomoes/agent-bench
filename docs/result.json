@@ -713,5 +713,203 @@
     "tokens_used": 945,
     "input_tokens": 5,
     "output_tokens": 940
+  },
+  {
+    "task_id": "CODING-001",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:47:53.251Z",
+    "iterations": 4,
+    "duration_secs": 46.96,
+    "tokens_used": 6547,
+    "input_tokens": 5963,
+    "output_tokens": 584
+  },
+  {
+    "task_id": "CODING-001",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:47:54.250Z",
+    "iterations": 6,
+    "duration_secs": 37.59,
+    "tokens_used": 17775,
+    "input_tokens": 16919,
+    "output_tokens": 856
+  },
+  {
+    "task_id": "CODING-002",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:48:24.697Z",
+    "iterations": 5,
+    "duration_secs": 28.27,
+    "tokens_used": 17264,
+    "input_tokens": 16854,
+    "output_tokens": 410
+  },
+  {
+    "task_id": "CODING-002",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:48:49.800Z",
+    "iterations": 8,
+    "duration_secs": 54.28,
+    "tokens_used": 8823,
+    "input_tokens": 8319,
+    "output_tokens": 504
+  },
+  {
+    "task_id": "CODING-003",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:49:09.498Z",
+    "iterations": 5,
+    "duration_secs": 42.65,
+    "tokens_used": 19000,
+    "input_tokens": 18179,
+    "output_tokens": 821
+  },
+  {
+    "task_id": "CODING-003",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:49:45.117Z",
+    "iterations": 6,
+    "duration_secs": 53.08,
+    "tokens_used": 8138,
+    "input_tokens": 7538,
+    "output_tokens": 600
+  },
+  {
+    "task_id": "WRITING-001",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:50:15.235Z",
+    "iterations": 7,
+    "duration_secs": 63.53,
+    "tokens_used": 3785,
+    "input_tokens": 3047,
+    "output_tokens": 738
+  },
+  {
+    "task_id": "WRITING-001",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:50:28.603Z",
+    "iterations": 6,
+    "duration_secs": 41.27,
+    "tokens_used": 9506,
+    "input_tokens": 9122,
+    "output_tokens": 384
+  },
+  {
+    "task_id": "WRITING-002",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:50:39.738Z",
+    "iterations": 4,
+    "duration_secs": 22.37,
+    "tokens_used": 15717,
+    "input_tokens": 15388,
+    "output_tokens": 329
+  },
+  {
+    "task_id": "WRITING-003",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:51:13.585Z",
+    "iterations": 4,
+    "duration_secs": 31.62,
+    "tokens_used": 16085,
+    "input_tokens": 15632,
+    "output_tokens": 453
+  },
+  {
+    "task_id": "WRITING-002",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:51:17.700Z",
+    "iterations": 6,
+    "duration_secs": 46.94,
+    "tokens_used": 9641,
+    "input_tokens": 9279,
+    "output_tokens": 362
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:51:41.679Z",
+    "iterations": 6,
+    "duration_secs": 25.86,
+    "tokens_used": 16124,
+    "input_tokens": 15647,
+    "output_tokens": 477
+  },
+  {
+    "task_id": "WRITING-003",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:51:57.384Z",
+    "iterations": 5,
+    "duration_secs": 37.47,
+    "tokens_used": 5347,
+    "input_tokens": 4855,
+    "output_tokens": 492
+  },
+  {
+    "task_id": "TOOLS-002",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:52:02.052Z",
+    "iterations": 5,
+    "duration_secs": 18.13,
+    "tokens_used": 15486,
+    "input_tokens": 15172,
+    "output_tokens": 314
+  },
+  {
+    "task_id": "TOOLS-003",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "deepseek/deepseek-v4-pro",
+    "timestamp": "2026-04-24T12:52:36.774Z",
+    "iterations": 6,
+    "duration_secs": 32.55,
+    "tokens_used": 17232,
+    "input_tokens": 16557,
+    "output_tokens": 675
+  },
+  {
+    "task_id": "TOOLS-001",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:52:50.473Z",
+    "iterations": 7,
+    "duration_secs": 50.85,
+    "tokens_used": 11803,
+    "input_tokens": 11302,
+    "output_tokens": 501
+  },
+  {
+    "task_id": "TOOLS-002",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:53:11.423Z",
+    "iterations": 4,
+    "duration_secs": 18.77,
+    "tokens_used": 10693,
+    "input_tokens": 10523,
+    "output_tokens": 170
+  },
+  {
+    "task_id": "TOOLS-003",
+    "agent_version": "@opencode-ai/sdk@1.14.22",
+    "model_name": "openai/gpt-5.5",
+    "timestamp": "2026-04-24T12:54:16.201Z",
+    "iterations": 9,
+    "duration_secs": 62.71,
+    "tokens_used": 14598,
+    "input_tokens": 13917,
+    "output_tokens": 681
   }
 ]
