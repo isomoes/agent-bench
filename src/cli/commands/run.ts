@@ -39,7 +39,7 @@ export function createRunCommand(config: RunnerConfig): Command {
       [] as string[]
     )
     .option('--no-verify', 'Skip verification step')
-    .option('--judge-model <model>', 'LLM model used as judge for tasks with a judge_prompt')
+    .option('--judge-model <model>', 'LLM model used as judge for verification')
     .option('--filter <filter>', 'Filter tasks (e.g., difficulty=easy)')
     .action(async (options) => {
       try {

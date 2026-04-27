@@ -6,7 +6,7 @@ import { TaskLoader } from './loader.js';
 import { WorkspaceManager } from './workspace.js';
 import { Task } from './task.js';
 import type { Agent } from '../agents/types.js';
-import { Verifier, callJudge } from '../evaluator/verifier.js';
+import { callJudge } from '../evaluator/verifier.js';
 import type { BenchmarkResult } from '../evaluator/results.js';
 import {
   createSuccess,
@@ -34,6 +34,12 @@ export class TaskRunner {
     this.config = config;
     this.loader = new TaskLoader(config.tasksDir);
     this.workspace = new WorkspaceManager(config.workspaceDir);
+  }
+
+  private buildJudgePrompt(task: Task): string {
+    return task.verification.judge_prompt ??
+      `The agent was asked to complete this benchmark task:\n\n${task.prompt}\n\n` +
+      'Evaluate whether the task was completed correctly using the files in the workspace and the agent output.';
   }
 
   /**
@@ -236,13 +242,13 @@ export class TaskRunner {
           agentResult.outputTokens,
           null,
         );
-      } else if (task.verification.judge_prompt) {
+      } else {
         // LLM judge verification
         const judgeModel = this.config.judgeModel;
         logger.info(`Running LLM judge verification (${judgeModel})...`);
         try {
           const judgement = await callJudge(
-            task.verification.judge_prompt,
+            this.buildJudgePrompt(task),
             agentResult.output,
             judgeModel,
             workspacePath,
@@ -281,64 +287,7 @@ export class TaskRunner {
             agentResult.modelName,
             agentResult.inputTokens,
             agentResult.outputTokens,
-            null,
-          );
-        }
-      } else {
-        // Deterministic verify.py verification
-        logger.info('Running verification...');
-        try {
-          const verification = await Verifier.verify(task, workspacePath);
-
-          if (verification.passed) {
-            logger.success('Verification passed');
-            result = createSuccess(
-              task.id,
-              agent.name(),
-              agentResult.iterations,
-              agentResult.tokensUsed,
-              agentResult.durationSecs,
-              agentResult.agentVersion,
-              agentResult.modelName,
-              agentResult.inputTokens,
-              agentResult.outputTokens,
-              null,
-            );
-          } else {
-            logger.error(`Verification failed with exit code: ${verification.exitCode}`);
-            result = createFailure(
-              task.id,
-              agent.name(),
-              agentResult.iterations,
-              agentResult.tokensUsed,
-              agentResult.durationSecs,
-              'Verification tests failed',
-              agentResult.agentVersion,
-              agentResult.modelName,
-              agentResult.inputTokens,
-              agentResult.outputTokens,
-              null,
-            );
-          }
-
-          result = withVerificationOutput(
-            result,
-            `Exit code: ${verification.exitCode}\n\nSTDOUT:\n${verification.stdout}\n\nSTDERR:\n${verification.stderr}`
-          );
-        } catch (error) {
-          logger.error(`Verification error: ${error}`);
-          result = createFailure(
-            task.id,
-            agent.name(),
-            agentResult.iterations,
-            agentResult.tokensUsed,
-            agentResult.durationSecs,
-            `Verification error: ${error}`,
-            agentResult.agentVersion,
-            agentResult.modelName,
-            agentResult.inputTokens,
-            agentResult.outputTokens,
-            null,
+            judgeModel,
           );
         }
       }

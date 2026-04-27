@@ -13,7 +13,7 @@ export interface RunnerConfig {
   resultsDir: string;
   workspaceDir: string;
   maxIterations: number;
-  /** LLM model used as judge when a task has a judge_prompt. */
+  /** LLM model used as judge for verification. */
   judgeModel: string;
 }
 
