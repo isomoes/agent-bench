@@ -251,7 +251,7 @@ export class TaskRunner {
             this.buildJudgePrompt(task),
             agentResult.output,
             judgeModel,
-            workspacePath,
+            agentPath,
           );
 
           logger.info(`Judge score: ${judgement.score}/100 — ${judgement.reasoning.split('\n')[0]}`);

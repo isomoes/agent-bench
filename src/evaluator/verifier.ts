@@ -3,7 +3,8 @@
  */
 
 import { spawn } from 'child_process';
-import { join } from 'path';
+import { readdir, readFile, stat } from 'fs/promises';
+import { join, relative } from 'path';
 import { Buffer } from 'node:buffer';
 import { Task } from '../core/task.js';
 import { VerificationError } from '../utils/errors.js';
@@ -23,6 +24,68 @@ export interface JudgeResult {
   judge_model: string;
   /** The full raw response from the judge. */
   reasoning: string;
+}
+
+const MAX_EVIDENCE_FILES = 60;
+const MAX_EVIDENCE_BYTES_PER_FILE = 8_000;
+
+async function collectWorkspaceEvidence(workspacePath: string): Promise<string> {
+  const files: string[] = [];
+
+  async function walk(dir: string): Promise<void> {
+    if (files.length >= MAX_EVIDENCE_FILES) {
+      return;
+    }
+
+    const entries = await readdir(dir, { withFileTypes: true });
+    entries.sort((a, b) => a.name.localeCompare(b.name));
+
+    for (const entry of entries) {
+      if (files.length >= MAX_EVIDENCE_FILES) {
+        return;
+      }
+
+      if (entry.name === '.git' || entry.name === 'node_modules') {
+        continue;
+      }
+
+      const fullPath = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        await walk(fullPath);
+      } else if (entry.isFile()) {
+        files.push(fullPath);
+      }
+    }
+  }
+
+  try {
+    await walk(workspacePath);
+  } catch (error) {
+    return `Unable to read workspace evidence: ${error}`;
+  }
+
+  if (files.length === 0) {
+    return 'No files found in workspace.';
+  }
+
+  const sections: string[] = [];
+  for (const file of files) {
+    const relPath = relative(workspacePath, file);
+    try {
+      const fileStat = await stat(file);
+      if (fileStat.size > MAX_EVIDENCE_BYTES_PER_FILE) {
+        sections.push(`FILE: ${relPath}\nSIZE: ${fileStat.size} bytes\nCONTENT: <omitted: file too large>`);
+        continue;
+      }
+
+      const content = await readFile(file, 'utf-8');
+      sections.push(`FILE: ${relPath}\nSIZE: ${fileStat.size} bytes\nCONTENT:\n${content}`);
+    } catch (error) {
+      sections.push(`FILE: ${relPath}\nCONTENT: <unable to read: ${error}>`);
+    }
+  }
+
+  return sections.join('\n\n---\n\n');
 }
 
 /**
@@ -73,9 +136,13 @@ export async function callJudge(
     }
     const sessionId = sessionResp.data.id;
 
+    const workspaceEvidence = await collectWorkspaceEvidence(workspacePath);
+
     const fullPrompt =
       'You are a strict benchmark evaluator. ' +
       'Evaluate how well the agent completed the task and assign a score from 0 to 100.\n' +
+      'Use the workspace evidence below as the source of truth for files the agent created. ' +
+      'Do not infer failure only because tool outputs are omitted from the transcript.\n' +
       '  100 = fully correct with no issues\n' +
       '  70-99 = mostly correct, minor issues\n' +
       '  1-69 = partially correct, significant issues\n' +
@@ -83,7 +150,7 @@ export async function callJudge(
       'You MUST respond with exactly two lines and nothing else:\n' +
       'SCORE: <integer 0-100>\n' +
       'REASON: <one sentence explanation>\n\n' +
-      `${judgePrompt}\n\n---\nAgent output:\n${agentOutput}`;
+      `${judgePrompt}\n\n---\nWorkspace evidence:\n${workspaceEvidence}\n\n---\nAgent output:\n${agentOutput}`;
 
     // Send prompt and get synchronous response (parts returned directly)
     const promptResp = await client.session.prompt({
