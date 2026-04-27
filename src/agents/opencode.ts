@@ -141,13 +141,11 @@ export class OpencodeAgent implements Agent {
     const agentType = this.selectAgentType(task);
 
     try {
-      // Send task prompt
+      // Send task prompt asynchronously (returns 204 immediately).
       console.log(`Sending prompt to OpenCode...`);
-      await client.session.prompt({
+      await client.session.promptAsync({
         path: { id: sessionId },
-        query: {
-          directory: workspace,
-        },
+        query: { directory: workspace },
         body: {
           parts: [
             {
@@ -157,10 +155,11 @@ export class OpencodeAgent implements Agent {
           ],
           agent: agentType,
           model: this.modelConfig,
-          // Note: Tool permissions are controlled at the agent level in OpenCode
-          // We would need to create custom agents for different permission sets
         },
       });
+      // Wait for session.idle via SSE, auto-approving any permission prompts.
+      console.log(`Waiting for session to complete...`);
+      await this.waitForIdle(client, sessionId, workspace, task.timeout);
 
       const durationSecs = (Date.now() - startTime) / 1000;
 
@@ -216,6 +215,56 @@ export class OpencodeAgent implements Agent {
       if (timeoutHandle) {
         clearTimeout(timeoutHandle);
       }
+    }
+  }
+
+  /**
+   * Subscribe to SSE events and wait until the session is idle.
+   * While waiting, auto-approve any permission.updated events so the benchmark
+   * never hangs on a permission prompt asking for user confirmation.
+   */
+  private async waitForIdle(
+    client: OpencodeClient,
+    sessionId: string,
+    workspace: string,
+    timeoutSecs: number,
+  ): Promise<void> {
+    const { stream } = await client.event.subscribe({
+      query: { directory: workspace },
+    });
+
+    const timer = setTimeout(() => {
+      console.warn(`waitForIdle: timed out after ${timeoutSecs}s for session ${sessionId}`);
+    }, timeoutSecs * 1000);
+
+    try {
+      for await (const raw of stream) {
+        // The SSE payload is wrapped: { payload: { type, properties } }
+        const ev = (raw as any)?.payload ?? raw as any;
+        const type: string = ev?.type ?? "";
+        const props = ev?.properties ?? {};
+
+        if (type === "session.idle" && props.sessionID === sessionId) {
+          return;
+        }
+
+        // Auto-approve permission requests for this session.
+        if (type === "permission.updated" && props.sessionID === sessionId) {
+          const permId: string = props.id;
+          console.log(`Auto-approving permission: ${props.title ?? permId}`);
+          try {
+            await client.postSessionIdPermissionsPermissionId({
+              path: { id: sessionId, permissionID: permId },
+              query: { directory: workspace },
+              body: { response: "always" },
+            });
+          } catch (e) {
+            console.warn(`Failed to approve permission ${permId}: ${e}`);
+          }
+        }
+      }
+    } finally {
+      clearTimeout(timer);
     }
   }
 
@@ -301,17 +350,32 @@ export class OpencodeAgent implements Agent {
           continue;
         }
 
+        // For input tokens: each turn re-sends the entire accumulated context, so
+        // summing across all turns would count shared context N times. Instead we
+        // take only the LAST assistant message's input (including cache fields) as
+        // the canonical "peak context size", which is the true unique input cost.
+        // This is correct for all providers: GPT, Claude, DeepSeek, etc.
+        // For output tokens: every turn produces genuinely new output, so we sum.
+        let lastInputTokens = 0;
+
         const isSubagent = sid !== sessionId;
         for (const message of messagesResponse.data) {
           const info = message.info;
           const role = info?.role || "unknown";
           const parts = message.parts || [];
 
-          // Accumulate tokens and cost from each completed assistant message
           if (info?.role === "assistant") {
             metrics.iterations++;
-            metrics.inputTokens += (info as any).tokens?.input || 0;
-            metrics.outputTokens += (info as any).tokens?.output || 0;
+            const tokens = (info as any).tokens;
+            // Track the latest assistant message's total input (input + cache.read
+            // + cache.write). cache fields are non-zero on Claude; GPT reports
+            // cached reads under cache.read too. Taking the max/last avoids
+            // double-counting context that grows cumulatively each turn.
+            lastInputTokens =
+              (tokens?.input || 0) +
+              (tokens?.cache?.read || 0) +
+              (tokens?.cache?.write || 0);
+            metrics.outputTokens += tokens?.output || 0;
             metrics.cost += (info as any).cost || 0;
           }
 
@@ -333,6 +397,9 @@ export class OpencodeAgent implements Agent {
             conversationParts.push(`${prefix}\n${messageParts.join("\n")}`);
           }
         }
+
+        // Add the peak input size for this session (last assistant message only)
+        metrics.inputTokens += lastInputTokens;
       } catch (error) {
         console.warn(`Failed to retrieve messages for session ${sid}: ${error}`);
       }
