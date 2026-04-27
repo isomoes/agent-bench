@@ -5,6 +5,26 @@
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 
+/**
+ * V1 composite score for a benchmark run.
+ *
+ * - Failed runs (pass === false) always score 0.
+ * - Passed runs are scored on speed × cost (geometric mean, 0–100):
+ *     speed_factor = 1 / (1 + duration_secs / 60)     half-life 60 s
+ *     cost_factor  = 1 / (1 + tokens_used  / 20_000)  half-life 20 k tokens
+ *     score        = 100 × √(speed_factor × cost_factor)
+ */
+export function calcScore(
+  passed: boolean,
+  durationSecs: number,
+  tokensUsed: number | null,
+): number {
+  if (!passed) return 0;
+  const speed = 1 / (1 + durationSecs / 60);
+  const cost  = 1 / (1 + (tokensUsed ?? 0) / 20_000);
+  return Math.round(100 * Math.sqrt(speed * cost) * 10) / 10;
+}
+
 function sanitizeForFilename(value: string): string {
   return value.replace(/[^a-zA-Z0-9._-]/g, '-');
 }
@@ -21,6 +41,9 @@ export interface BenchmarkResult {
   agent: string;
   success: boolean;
   score: number;
+  /** The LLM that acted as judge and assigned the score. null when scoring
+   *  is purely deterministic (verify.py exit code only). */
+  judge_model: string | null;
   iterations: number;
   tokens_used: number | null;
   input_tokens: number | null;
@@ -46,13 +69,15 @@ export function createSuccess(
   agentVersion: string | null = null,
   modelName: string | null = null,
   inputTokens: number | null = null,
-  outputTokens: number | null = null
+  outputTokens: number | null = null,
+  judgeModel: string | null = null,
 ): BenchmarkResult {
   return {
     task_id: taskId,
     agent,
     success: true,
-    score: 100,
+    score: calcScore(true, durationSecs, tokensUsed),
+    judge_model: judgeModel,
     iterations,
     tokens_used: tokensUsed,
     input_tokens: inputTokens,
@@ -80,13 +105,15 @@ export function createFailure(
   agentVersion: string | null = null,
   modelName: string | null = null,
   inputTokens: number | null = null,
-  outputTokens: number | null = null
+  outputTokens: number | null = null,
+  judgeModel: string | null = null,
 ): BenchmarkResult {
   return {
     task_id: taskId,
     agent,
     success: false,
     score: 0,
+    judge_model: judgeModel,
     iterations,
     tokens_used: tokensUsed,
     input_tokens: inputTokens,
@@ -98,6 +125,19 @@ export function createFailure(
     error,
     agent_version: agentVersion,
     model_name: modelName,
+  };
+}
+
+/**
+ * Override the score on a result (used when an LLM judge provides a direct 0-100 score).
+ * Also sets success=true when score > 0.
+ */
+export function withJudgeScore(result: BenchmarkResult, score: number): BenchmarkResult {
+  const clamped = Math.max(0, Math.min(100, score));
+  return {
+    ...result,
+    score: clamped,
+    success: clamped > 0,
   };
 }
 
@@ -137,10 +177,10 @@ export async function saveResult(result: BenchmarkResult, resultsDir: string): P
 
   await writeFile(path, JSON.stringify(result, null, 2), 'utf-8');
 
-  // Auto-append to summary JSON
+  // Auto-append to V1 summary JSON
   try {
     const { appendResultToJSON } = await import('../collectors/json.js');
-    const jsonPath = join(resultsDir, 'result.json');
+    const jsonPath = join(resultsDir, 'result-v1.json');
     await appendResultToJSON(result, jsonPath);
   } catch (error) {
     // Log but don't fail the save operation

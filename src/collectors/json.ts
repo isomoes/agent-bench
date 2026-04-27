@@ -8,13 +8,17 @@ import type { BenchmarkResult } from '../evaluator/results.js';
 import { logger } from '../utils/logger.js';
 
 /**
- * A single summary entry (successful runs only).
+ * V1 summary entry — includes pass/fail, composite score, and judge model.
  */
 export interface SummaryEntry {
   task_id: string;
   agent_version: string;
   model_name: string;
   timestamp: string;
+  pass: boolean;
+  score: number;
+  /** LLM that acted as judge. null = deterministic verify.py only. */
+  judge_model: string | null;
   iterations: number;
   duration_secs: number;
   tokens_used: number | null;
@@ -28,6 +32,9 @@ function toEntry(result: BenchmarkResult): SummaryEntry {
     agent_version: result.agent_version || '',
     model_name: result.model_name || '',
     timestamp: result.timestamp,
+    pass: result.success,
+    score: result.score,
+    judge_model: result.judge_model ?? null,
     iterations: result.iterations,
     duration_secs: parseFloat(result.duration_secs.toFixed(2)),
     tokens_used: result.tokens_used,
@@ -73,17 +80,15 @@ export async function collectResults(resultsDir: string): Promise<BenchmarkResul
 }
 
 /**
- * Write successful results to a JSON summary file.
+ * Write all results (pass and fail) to a V1 JSON summary file.
  */
 export async function writeJSON(results: BenchmarkResult[], outputPath: string): Promise<void> {
-  const successResults = results.filter(r => r.success && r.error === null);
-
-  if (successResults.length === 0) {
-    logger.warn('No successful results to write');
+  if (results.length === 0) {
+    logger.warn('No results to write');
     return;
   }
 
-  const entries = successResults.map(toEntry);
+  const entries = results.map(toEntry);
   await writeFile(outputPath, JSON.stringify(entries, null, 2), 'utf-8');
   logger.success(`Wrote ${entries.length} results to ${outputPath}`);
 }
@@ -99,16 +104,10 @@ export async function collectAndWrite(resultsDir: string, outputPath: string): P
 }
 
 /**
- * Append a single successful result to the JSON summary file.
+ * Append a result (pass or fail) to the V1 JSON summary file.
  * Creates the file if it doesn't exist.
  */
 export async function appendResultToJSON(result: BenchmarkResult, outputPath: string): Promise<void> {
-  // Skip error/failed results
-  if (!result.success || result.error !== null) {
-    logger.debug(`Skipping failed result from summary: ${result.task_id} (${result.agent})`);
-    return;
-  }
-
   try {
     // Load existing entries
     let entries: SummaryEntry[] = [];

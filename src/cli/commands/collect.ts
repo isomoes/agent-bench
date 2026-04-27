@@ -9,8 +9,8 @@ import { logger } from '../../utils/logger.js';
 
 export function createCollectCommand(resultsDir: string): Command {
   const command = new Command('collect')
-    .description('Collect benchmark results into JSON summary')
-    .option('-o, --output <path>', 'Output JSON path', join(resultsDir, 'result.json'))
+    .description('Collect benchmark results into V1 JSON summary')
+    .option('-o, --output <path>', 'Output JSON path', join(resultsDir, 'result-v1.json'))
     .action(async (options) => {
       try {
         await collectAndWrite(resultsDir, options.output);

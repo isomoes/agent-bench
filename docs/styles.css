@@ -268,6 +268,23 @@ td.score {
   background: #f85149;
 }
 
+/* Pass / Fail badge */
+.pass-cell {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 0 0.5rem;
+}
+
+.pass-yes {
+  color: #3fb950;
+}
+
+.pass-no {
+  color: #f85149;
+}
+
 .score-model {
   max-width: 1100px;
   margin: 0 auto 1.5rem;

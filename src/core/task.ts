@@ -53,11 +53,19 @@ const SourceConfigOverrideSchema = z.object({
 /**
  * Verification configuration.
  * Only `timeout` needs to be stored in the YAML; `type` and `command` are derived.
+ *
+ * When `judge_prompt` is set, verification is performed by an LLM judge instead
+ * of (or in addition to) `verify.py`. The judge is given the prompt, the agent's
+ * full conversation output, and asked to return PASS or FAIL with a reason.
+ *
+ * `judge_model` overrides the default judge model for this specific task.
  */
 export const VerificationConfigSchema = z.object({
   type: z.string().default('python'),
   command: z.string().optional(),   // derived when absent
   timeout: z.number().int().positive().default(60),
+  /** System/user prompt sent to the LLM judge. Omit to use verify.py only. */
+  judge_prompt: z.string().optional(),
 });
 export type VerificationConfig = z.infer<typeof VerificationConfigSchema> & { command: string };
 

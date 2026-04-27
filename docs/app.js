@@ -11,7 +11,7 @@ async function load() {
     allData = await res.json();
   } catch (e) {
     document.getElementById("tbody").innerHTML =
-      `<tr><td colspan="8" class="empty">Could not load result.json: ${e.message}</td></tr>`;
+      `<tr><td colspan="9" class="empty">Could not load result.json: ${e.message}</td></tr>`;
     return;
   }
   populateFilters();
@@ -40,8 +40,8 @@ function filtered() {
 
 function sorted(data) {
   return [...data].sort((a, b) => {
-    let va = sortCol === "score" ? calcScore(a) : a[sortCol];
-    let vb = sortCol === "score" ? calcScore(b) : b[sortCol];
+    let va = sortCol === "score" ? calcScore(a) : sortCol === "pass" ? (a.pass === false ? 0 : 1) : a[sortCol];
+    let vb = sortCol === "score" ? calcScore(b) : sortCol === "pass" ? (b.pass === false ? 0 : 1) : b[sortCol];
     if (va == null) va = "";
     if (vb == null) vb = "";
     if (typeof va === "number") return sortAsc ? va - vb : vb - va;
@@ -52,17 +52,25 @@ function sorted(data) {
 }
 
 /**
- * Penalty-based score: starts at 100, deducts for iterations, duration, tokens.
- *   - iterations:  5 pts each
- *   - duration:    0.5 pts per second
- *   - tokens:      0.0001 pts per token
- * Clamped to [0, 100].
+ * V1 composite score:
+ *   - Failed runs (pass === false) always score 0.
+ *   - Passed runs are scored on speed × cost efficiency (geometric mean), 0–100.
+ *       speed_factor = 1 / (1 + duration_secs / 60)   half-life at 60 s
+ *       cost_factor  = 1 / (1 + tokens_used  / 20000) half-life at 20 k tokens
+ *       score        = 100 × √(speed_factor × cost_factor)
+ *   - If the entry already has a pre-computed `score` field (from result.json),
+ *     that value is used directly; otherwise the formula is applied on the fly.
  */
 function calcScore(d) {
-  const iterPenalty = (d.iterations ?? 0) * 5;
-  const durPenalty = (d.duration_secs ?? 0) * 0.5;
-  const tokPenalty = (d.tokens_used ?? 0) * 0.0001;
-  return Math.max(0, Math.min(100, 100 - iterPenalty - durPenalty - tokPenalty));
+  if (d.pass === false) return 0;
+  // Use pre-computed score when present
+  if (typeof d.score === "number") return d.score;
+  // Fallback: compute from raw metrics
+  const duration = d.duration_secs ?? 0;
+  const tokens   = d.tokens_used   ?? 0;
+  const speed = 1 / (1 + duration / 60);
+  const cost  = 1 / (1 + tokens  / 20000);
+  return Math.round(100 * Math.sqrt(speed * cost) * 10) / 10;
 }
 
 function scoreClass(score) {
@@ -76,6 +84,14 @@ function scoreCell(d) {
   const cls = scoreClass(score);
   const barW = Math.max(2, Math.round(score * 0.6));
   return `<td class="score ${cls}"><span class="score-bar"><span class="bar" style="width:${barW}px"></span>${score.toFixed(1)}</span></td>`;
+}
+
+function passCell(d) {
+  // d.pass may be a boolean (V1) or absent (legacy entries treated as passed)
+  const passed = d.pass !== false;
+  const cls  = passed ? "pass-yes" : "pass-no";
+  const label = passed ? "PASS" : "FAIL";
+  return `<td class="pass-cell ${cls}">${label}</td>`;
 }
 
 function fmt(ts) {
@@ -234,7 +250,7 @@ function render() {
 
   const tbody = document.getElementById("tbody");
   if (data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" class="empty">No results match the current filters.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" class="empty">No results match the current filters.</td></tr>`;
     return;
   }
 
@@ -244,6 +260,7 @@ function render() {
       <tr>
         <td class="task-id">${esc(d.task_id)}</td>
         <td class="model" title="${esc(d.model_name)}">${esc(d.model_name)}</td>
+        ${passCell(d)}
         <td class="num">${d.iterations}</td>
         <td class="num duration">${d.duration_secs.toFixed(2)}</td>
         <td class="num tokens">${d.tokens_used != null ? d.tokens_used.toLocaleString() : "—"}</td>

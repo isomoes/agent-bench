@@ -41,11 +41,8 @@ export async function collectResults(resultsDir: string): Promise<BenchmarkResul
  * Write results to a CSV file.
  */
 export async function writeCSV(results: BenchmarkResult[], outputPath: string): Promise<void> {
-  // Filter out error/failed results
-  const successResults = results.filter(r => r.success && r.error === null);
-
-  if (successResults.length === 0) {
-    logger.warn('No successful results to write');
+  if (results.length === 0) {
+    logger.warn('No results to write');
     return;
   }
 
@@ -55,20 +52,26 @@ export async function writeCSV(results: BenchmarkResult[], outputPath: string): 
     'agent_version',
     'model_name',
     'timestamp',
+    'pass',
+    'score',
+    'judge_model',
     'iterations',
     'duration_secs',
     'tokens_used',
   ];
 
   // Convert results to CSV rows
-  const rows = successResults.map(result => ({
+  const rows = results.map(result => ({
     task_id: result.task_id,
     agent_version: result.agent_version || '',
     model_name: result.model_name || '',
     timestamp: result.timestamp,
+    pass: result.success,
+    score: result.score,
+    judge_model: result.judge_model || '',
     iterations: result.iterations,
     duration_secs: result.duration_secs.toFixed(2),
-    tokens_used: result.tokens_used || '',
+    tokens_used: result.tokens_used ?? '',
   }));
 
   // Generate CSV
@@ -80,7 +83,7 @@ export async function writeCSV(results: BenchmarkResult[], outputPath: string): 
   // Write to file
   await writeFile(outputPath, csv, 'utf-8');
 
-  logger.success(`Wrote ${successResults.length} results to ${outputPath}`);
+  logger.success(`Wrote ${rows.length} results to ${outputPath}`);
 }
 
 /**
@@ -99,12 +102,6 @@ export async function collectAndWrite(resultsDir: string, outputPath: string): P
  * Creates the file with header if it doesn't exist.
  */
 export async function appendResultToCSV(result: BenchmarkResult, outputPath: string): Promise<void> {
-  // Skip error/failed results
-  if (!result.success || result.error !== null) {
-    logger.debug(`Skipping failed result from CSV: ${result.task_id} (${result.agent})`);
-    return;
-  }
-
   try {
     // Check if file exists
     let existingContent = '';
@@ -120,6 +117,9 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
       'agent_version',
       'model_name',
       'timestamp',
+      'pass',
+      'score',
+      'judge_model',
       'iterations',
       'duration_secs',
       'tokens_used',
@@ -131,9 +131,12 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
       agent_version: result.agent_version || '',
       model_name: result.model_name || '',
       timestamp: result.timestamp,
+      pass: result.success,
+      score: result.score,
+      judge_model: result.judge_model || '',
       iterations: result.iterations,
       duration_secs: result.duration_secs.toFixed(2),
-      tokens_used: result.tokens_used || '',
+      tokens_used: result.tokens_used ?? '',
     };
 
     // Check for duplicates

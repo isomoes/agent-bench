@@ -6,13 +6,14 @@ import { TaskLoader } from './loader.js';
 import { WorkspaceManager } from './workspace.js';
 import { Task } from './task.js';
 import type { Agent } from '../agents/types.js';
-import { Verifier } from '../evaluator/verifier.js';
+import { Verifier, callJudge } from '../evaluator/verifier.js';
 import type { BenchmarkResult } from '../evaluator/results.js';
 import {
   createSuccess,
   createFailure,
   withAgentOutput,
   withVerificationOutput,
+  withJudgeScore,
   saveResult,
   createSuiteResults,
   saveSuiteResults,
@@ -232,9 +233,59 @@ export class TaskRunner {
           agentResult.agentVersion,
           agentResult.modelName,
           agentResult.inputTokens,
-          agentResult.outputTokens
+          agentResult.outputTokens,
+          null,
         );
+      } else if (task.verification.judge_prompt) {
+        // LLM judge verification
+        const judgeModel = this.config.judgeModel;
+        logger.info(`Running LLM judge verification (${judgeModel})...`);
+        try {
+          const judgement = await callJudge(
+            task.verification.judge_prompt,
+            agentResult.output,
+            judgeModel,
+            workspacePath,
+          );
+
+          logger.info(`Judge score: ${judgement.score}/100 — ${judgement.reasoning.split('\n')[0]}`);
+
+          // Start with a base result; withJudgeScore overrides score + success
+          result = withJudgeScore(
+            createSuccess(
+              task.id,
+              agent.name(),
+              agentResult.iterations,
+              agentResult.tokensUsed,
+              agentResult.durationSecs,
+              agentResult.agentVersion,
+              agentResult.modelName,
+              agentResult.inputTokens,
+              agentResult.outputTokens,
+              judgement.judge_model,
+            ),
+            judgement.score,
+          );
+
+          result = withVerificationOutput(result, judgement.reasoning);
+        } catch (error) {
+          logger.error(`Judge error: ${error}`);
+          result = createFailure(
+            task.id,
+            agent.name(),
+            agentResult.iterations,
+            agentResult.tokensUsed,
+            agentResult.durationSecs,
+            `Judge error: ${error}`,
+            agentResult.agentVersion,
+            agentResult.modelName,
+            agentResult.inputTokens,
+            agentResult.outputTokens,
+            null,
+          );
+        }
       } else {
+        // Deterministic verify.py verification
         logger.info('Running verification...');
         try {
           const verification = await Verifier.verify(task, workspacePath);
@@ -250,7 +301,8 @@ export class TaskRunner {
               agentResult.agentVersion,
               agentResult.modelName,
               agentResult.inputTokens,
-              agentResult.outputTokens
+              agentResult.outputTokens,
+              null,
             );
           } else {
             logger.error(`Verification failed with exit code: ${verification.exitCode}`);
@@ -264,11 +316,11 @@ export class TaskRunner {
               agentResult.agentVersion,
               agentResult.modelName,
               agentResult.inputTokens,
-              agentResult.outputTokens
+              agentResult.outputTokens,
+              null,
             );
           }
 
-          // Add verification output
           result = withVerificationOutput(
             result,
             `Exit code: ${verification.exitCode}\n\nSTDOUT:\n${verification.stdout}\n\nSTDERR:\n${verification.stderr}`
@@ -285,7 +337,8 @@ export class TaskRunner {
             agentResult.agentVersion,
             agentResult.modelName,
             agentResult.inputTokens,
-            agentResult.outputTokens
+            agentResult.outputTokens,
+            null,
           );
         }
       }

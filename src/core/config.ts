@@ -13,6 +13,8 @@ export interface RunnerConfig {
   resultsDir: string;
   workspaceDir: string;
   maxIterations: number;
+  /** LLM model used as judge when a task has a judge_prompt. */
+  judgeModel: string;
 }
 
 /**
@@ -24,6 +26,7 @@ export function createDefaultConfig(): RunnerConfig {
     resultsDir: join(process.cwd(), 'docs'),
     workspaceDir: join(tmpdir(), 'agent-bench'),
     maxIterations: 1,
+    judgeModel: process.env.JUDGE_MODEL ?? 'openai/gpt-5.5',
   };
 }
 
@@ -81,5 +84,6 @@ export function mergeConfig(userConfig: UserConfig, defaultConfig: RunnerConfig)
     resultsDir: userConfig.resultsDir || defaultConfig.resultsDir,
     workspaceDir: userConfig.workspaceDir || defaultConfig.workspaceDir,
     maxIterations: defaultConfig.maxIterations,
+    judgeModel: defaultConfig.judgeModel,
   };
 }

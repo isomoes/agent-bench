@@ -46,39 +46,40 @@
     </div>
 
     <details class="score-model">
-      <summary>Scoring Model</summary>
+      <summary>Scoring Model (V1)</summary>
       <div class="formula-wrap">
         <div class="formula">
-          <span class="keyword">Score</span> = <span class="keyword">clamp</span>(<span class="num">0</span>, <span class="num">100</span> − iteration_penalty − duration_penalty − token_penalty, <span class="num">100</span>)<br><br>
-          <span class="comment">// Penalty weights</span><br>
-          iteration_penalty = iterations × <span class="num">5</span><br>
-          duration_penalty &nbsp;= duration_secs × <span class="num">0.5</span><br>
-          token_penalty &nbsp;&nbsp;&nbsp;&nbsp;= tokens_used × <span class="num">0.0001</span>
+          <span class="comment">// Tasks that fail verify.py always score 0</span><br>
+          <span class="keyword">if</span> !pass → <span class="keyword">Score</span> = <span class="num">0</span><br><br>
+          <span class="comment">// Passed tasks: geometric mean of speed &amp; cost efficiency</span><br>
+          speed_factor = <span class="num">1</span> / (<span class="num">1</span> + duration_secs / <span class="num">60</span>)<br>
+          cost_factor &nbsp;= <span class="num">1</span> / (<span class="num">1</span> + tokens_used &nbsp;/ <span class="num">20000</span>)<br>
+          <span class="keyword">Score</span> = <span class="num">100</span> × √(speed_factor × cost_factor)
         </div>
 
         <table class="penalty-table">
           <thead>
             <tr>
               <th>Factor</th>
-              <th>Weight</th>
+              <th>Half-life</th>
               <th>Rationale</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>iterations</td>
-              <td>-5 / iter</td>
-              <td>Fewer iterations means the model solved the task more directly</td>
+              <td>pass (verify.py)</td>
+              <td>binary gate</td>
+              <td>Task correctness is required; failure sets score to 0</td>
             </tr>
             <tr>
               <td>duration_secs</td>
-              <td>-0.5 / sec</td>
-              <td>Faster completion indicates better efficiency</td>
+              <td>60 s</td>
+              <td>Speed — faster completion scores higher</td>
             </tr>
             <tr>
               <td>tokens_used</td>
-              <td>-0.0001 / tok</td>
-              <td>Lower token usage reflects more concise reasoning</td>
+              <td>20 000 tok</td>
+              <td>Cost — fewer tokens used scores higher</td>
             </tr>
           </tbody>
         </table>
@@ -99,6 +100,7 @@
             <th data-col="model_name">
               Model <span class="sort-icon">↕</span>
             </th>
+            <th data-col="pass">Pass <span class="sort-icon">↕</span></th>
             <th data-col="iterations" class="num">
               Iterations <span class="sort-icon">↕</span>
             </th>

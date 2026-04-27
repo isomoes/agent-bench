@@ -39,10 +39,14 @@ export function createRunCommand(config: RunnerConfig): Command {
       [] as string[]
     )
     .option('--no-verify', 'Skip verification step')
+    .option('--judge-model <model>', 'LLM model used as judge for tasks with a judge_prompt')
     .option('--filter <filter>', 'Filter tasks (e.g., difficulty=easy)')
     .action(async (options) => {
       try {
-        const runner = new TaskRunner(config);
+        const runnerConfig = options.judgeModel
+          ? { ...config, judgeModel: options.judgeModel }
+          : config;
+        const runner = new TaskRunner(runnerConfig);
         const skipVerify = !options.verify;
         const models = normalizeModels(options.model);
 
