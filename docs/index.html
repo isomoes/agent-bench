@@ -10,8 +10,16 @@
   </head>
   <body>
     <header>
-      <h1>Agent Bench Results</h1>
-      <p>Successful benchmark runs — sorted by most recent first</p>
+      <div class="header-top">
+        <div>
+          <h1>Agent Bench Results</h1>
+          <p>Benchmark runs — sorted by most recent first</p>
+        </div>
+        <div id="version-toggle" class="version-toggle">
+          <button class="ver-btn" data-ver="v0">V0</button>
+          <button class="ver-btn active" data-ver="v1">V1</button>
+        </div>
+      </div>
     </header>
 
     <div class="stats">
@@ -25,65 +33,83 @@
     </div>
 
     <div class="controls">
-      <label
-        >Task Name
-        <input
-          id="filter-task-name"
-          class="filter-input"
-          type="text"
-          placeholder="filter task..."
-        />
+      <label>Task Name
+        <input id="filter-task-name" class="filter-input" type="text" placeholder="filter task..." />
       </label>
-      <label
-        >Model
-        <input
-          id="filter-model"
-          class="filter-input"
-          type="text"
-          placeholder="filter model..."
-        />
+      <label>Model
+        <input id="filter-model" class="filter-input" type="text" placeholder="filter model..." />
       </label>
     </div>
 
-    <details class="score-model">
-      <summary>Scoring Model (V1)</summary>
+    <!-- V0 scoring panel -->
+    <details id="scoring-v0" class="score-model" style="display:none">
+      <summary>Scoring Model (V0)</summary>
       <div class="formula-wrap">
         <div class="formula">
-          <span class="comment">// Tasks that fail verify.py always score 0</span><br>
-          <span class="keyword">if</span> !pass → <span class="keyword">Score</span> = <span class="num">0</span><br><br>
-          <span class="comment">// Passed tasks: geometric mean of speed &amp; cost efficiency</span><br>
-          speed_factor = <span class="num">1</span> / (<span class="num">1</span> + duration_secs / <span class="num">60</span>)<br>
-          cost_factor &nbsp;= <span class="num">1</span> / (<span class="num">1</span> + tokens_used &nbsp;/ <span class="num">20000</span>)<br>
-          <span class="keyword">Score</span> = <span class="num">100</span> × √(speed_factor × cost_factor)
+          <span class="keyword">Score</span> = <span class="keyword">clamp</span>(<span class="num">0</span>, <span class="num">100</span> − iteration_penalty − duration_penalty − token_penalty, <span class="num">100</span>)<br><br>
+          <span class="comment">// Penalty weights</span><br>
+          iteration_penalty = iterations × <span class="num">5</span><br>
+          duration_penalty &nbsp;= duration_secs × <span class="num">0.5</span><br>
+          token_penalty &nbsp;&nbsp;&nbsp;&nbsp;= tokens_used × <span class="num">0.0001</span>
         </div>
-
         <table class="penalty-table">
           <thead>
-            <tr>
-              <th>Factor</th>
-              <th>Half-life</th>
-              <th>Rationale</th>
-            </tr>
+            <tr><th>Factor</th><th>Weight</th><th>Rationale</th></tr>
           </thead>
           <tbody>
             <tr>
-              <td>pass (verify.py)</td>
-              <td>binary gate</td>
-              <td>Task correctness is required; failure sets score to 0</td>
+              <td>iterations</td><td>-5 / iter</td>
+              <td>Fewer iterations means the model solved the task more directly</td>
             </tr>
             <tr>
-              <td>duration_secs</td>
-              <td>60 s</td>
-              <td>Speed — faster completion scores higher</td>
+              <td>duration_secs</td><td>-0.5 / sec</td>
+              <td>Faster completion indicates better efficiency</td>
             </tr>
             <tr>
-              <td>tokens_used</td>
-              <td>20 000 tok</td>
-              <td>Cost — fewer tokens used scores higher</td>
+              <td>tokens_used</td><td>-0.0001 / tok</td>
+              <td>Lower token usage reflects more concise reasoning</td>
             </tr>
           </tbody>
         </table>
+        <div class="color-legend">
+          <span><span class="dot dot-high"></span> High (≥ 70)</span>
+          <span><span class="dot dot-mid"></span> Mid (≥ 40)</span>
+          <span><span class="dot dot-low"></span> Low (&lt; 40)</span>
+        </div>
+      </div>
+    </details>
 
+    <!-- V1 scoring panel -->
+    <details id="scoring-v1" class="score-model">
+      <summary>Scoring Model (V1)</summary>
+      <div class="formula-wrap">
+        <div class="formula">
+          <span class="comment">// Three domains combined as a weighted average</span><br>
+          quality = judge_model(<span class="keyword">judge_prompt</span> + agent_output) &nbsp;<span class="comment">// 0–100</span><br>
+          speed &nbsp;&nbsp;= <span class="num">100</span> / (<span class="num">1</span> + duration_secs / <span class="num">60</span>) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// half-life 60 s</span><br>
+          cost &nbsp;&nbsp;&nbsp;= <span class="num">100</span> / (<span class="num">1</span> + tokens_used &nbsp;/ <span class="num">20000</span>) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// half-life 20k tok</span><br><br>
+          <span class="keyword">Score</span> = quality × <span class="num">0.6</span> + speed × <span class="num">0.2</span> + cost × <span class="num">0.2</span><br>
+          <span class="comment">// quality = 0 (judge FAIL) → Score = 0 regardless</span>
+        </div>
+        <table class="penalty-table">
+          <thead>
+            <tr><th>Domain</th><th>Weight</th><th>Rationale</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>quality</td><td>60%</td>
+              <td>LLM judge rates correctness 0–100; 0 means task failed</td>
+            </tr>
+            <tr>
+              <td>speed</td><td>20%</td>
+              <td>Faster completion scores higher — half score at 60 s</td>
+            </tr>
+            <tr>
+              <td>cost</td><td>20%</td>
+              <td>Fewer tokens scores higher — half score at 20k tokens</td>
+            </tr>
+          </tbody>
+        </table>
         <div class="color-legend">
           <span><span class="dot dot-high"></span> High (≥ 70)</span>
           <span><span class="dot dot-mid"></span> Mid (≥ 40)</span>
@@ -97,28 +123,17 @@
         <thead>
           <tr>
             <th data-col="task_id">Task <span class="sort-icon">↕</span></th>
-            <th data-col="model_name">
-              Model <span class="sort-icon">↕</span>
-            </th>
-            <th data-col="pass">Pass <span class="sort-icon">↕</span></th>
-            <th data-col="iterations" class="num">
-              Iterations <span class="sort-icon">↕</span>
-            </th>
-            <th data-col="duration_secs" class="num">
-              Duration (s) <span class="sort-icon">↕</span>
-            </th>
-            <th data-col="tokens_used" class="num">
-              Tokens <span class="sort-icon">↕</span>
-            </th>
-            <th data-col="score" class="num">
-              Score <span class="sort-icon">↕</span>
-            </th>
-            <th data-col="agent_version">
-              Version <span class="sort-icon">↕</span>
-            </th>
-            <th data-col="timestamp">
-              Timestamp <span class="sort-icon">↕</span>
-            </th>
+            <th data-col="model_name">Model <span class="sort-icon">↕</span></th>
+            <!-- V1-only columns -->
+            <th data-col="pass" class="col-v1">Pass <span class="sort-icon">↕</span></th>
+            <th data-col="judge_model" class="col-v1">Judge Model <span class="sort-icon">↕</span></th>
+            <!-- shared columns -->
+            <th data-col="iterations" class="num">Iterations <span class="sort-icon">↕</span></th>
+            <th data-col="duration_secs" class="num">Duration (s) <span class="sort-icon">↕</span></th>
+            <th data-col="tokens_used" class="num">Tokens <span class="sort-icon">↕</span></th>
+            <th data-col="score" class="num">Score <span class="sort-icon">↕</span></th>
+            <th data-col="agent_version">Version <span class="sort-icon">↕</span></th>
+            <th data-col="timestamp">Timestamp <span class="sort-icon">↕</span></th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>

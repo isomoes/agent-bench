@@ -8,21 +8,25 @@ import { join } from 'path';
 /**
  * V1 composite score for a benchmark run.
  *
- * - Failed runs (pass === false) always score 0.
- * - Passed runs are scored on speed × cost (geometric mean, 0–100):
- *     speed_factor = 1 / (1 + duration_secs / 60)     half-life 60 s
- *     cost_factor  = 1 / (1 + tokens_used  / 20_000)  half-life 20 k tokens
- *     score        = 100 × √(speed_factor × cost_factor)
+ * Three domains, weighted average:
+ *   quality = judge score (0–100), weight 0.6
+ *   speed   = 100 / (1 + duration_secs / 60),    half-life 60 s,    weight 0.2
+ *   cost    = 100 / (1 + tokens_used  / 20_000), half-life 20k tok, weight 0.2
+ *   score   = quality×0.6 + speed×0.2 + cost×0.2
+ *
+ * A judgeScore of 0 means the task failed; final score is 0.
+ * When judgeScore is null (no judge ran), quality defaults to 0.
  */
 export function calcScore(
-  passed: boolean,
+  judgeScore: number | null,
   durationSecs: number,
   tokensUsed: number | null,
 ): number {
-  if (!passed) return 0;
-  const speed = 1 / (1 + durationSecs / 60);
-  const cost  = 1 / (1 + (tokensUsed ?? 0) / 20_000);
-  return Math.round(100 * Math.sqrt(speed * cost) * 10) / 10;
+  const quality = judgeScore ?? 0;
+  if (quality === 0) return 0;
+  const speed = 100 / (1 + durationSecs / 60);
+  const cost  = 100 / (1 + (tokensUsed ?? 0) / 20_000);
+  return Math.round((quality * 0.6 + speed * 0.2 + cost * 0.2) * 10) / 10;
 }
 
 function sanitizeForFilename(value: string): string {
@@ -76,7 +80,7 @@ export function createSuccess(
     task_id: taskId,
     agent,
     success: true,
-    score: calcScore(true, durationSecs, tokensUsed),
+    score: calcScore(100, durationSecs, tokensUsed),
     judge_model: judgeModel,
     iterations,
     tokens_used: tokensUsed,
@@ -129,15 +133,16 @@ export function createFailure(
 }
 
 /**
- * Override the score on a result (used when an LLM judge provides a direct 0-100 score).
- * Also sets success=true when score > 0.
+ * Apply the V1 composite score to a result using the judge's quality score plus
+ * the run's own speed and cost metrics.
+ * Also sets success=true when the final composite score > 0.
  */
-export function withJudgeScore(result: BenchmarkResult, score: number): BenchmarkResult {
-  const clamped = Math.max(0, Math.min(100, score));
+export function withJudgeScore(result: BenchmarkResult, judgeScore: number): BenchmarkResult {
+  const composite = calcScore(judgeScore, result.duration_secs, result.tokens_used);
   return {
     ...result,
-    score: clamped,
-    success: clamped > 0,
+    score: composite,
+    success: composite > 0,
   };
 }
 

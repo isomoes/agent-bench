@@ -5,7 +5,7 @@
     "model_name": "deepseek/deepseek-v4-pro",
     "timestamp": "2026-04-27T12:27:56.369Z",
     "pass": true,
-    "score": 100,
+    "score": 83.1,
     "judge_model": "openai/gpt-5.5",
     "iterations": 6,
     "duration_secs": 41.1,
