@@ -44,9 +44,11 @@ export interface BenchmarkResult {
   task_id: string;
   agent: string;
   success: boolean;
+  /** Composite score computed from judge_score + speed + cost (frontend display value). */
   score: number;
-  /** The LLM that acted as judge and assigned the score. null when scoring
-   *  is purely deterministic (verify.py exit code only). */
+  /** Raw 0–100 score assigned by the LLM judge. null when no judge ran. */
+  judge_score: number | null;
+  /** The LLM that acted as judge. null when no judge ran. */
   judge_model: string | null;
   iterations: number;
   tokens_used: number | null;
@@ -81,6 +83,7 @@ export function createSuccess(
     agent,
     success: true,
     score: calcScore(100, durationSecs, tokensUsed),
+    judge_score: null,
     judge_model: judgeModel,
     iterations,
     tokens_used: tokensUsed,
@@ -117,6 +120,7 @@ export function createFailure(
     agent,
     success: false,
     score: 0,
+    judge_score: null,
     judge_model: judgeModel,
     iterations,
     tokens_used: tokensUsed,
@@ -141,6 +145,7 @@ export function withJudgeScore(result: BenchmarkResult, judgeScore: number): Ben
   const composite = calcScore(judgeScore, result.duration_secs, result.tokens_used);
   return {
     ...result,
+    judge_score: judgeScore,
     score: composite,
     success: composite > 0,
   };

@@ -12,14 +12,14 @@ function setVersion(v) {
   document.querySelectorAll(".ver-btn").forEach((b) => {
     b.classList.toggle("active", b.dataset.ver === v);
   });
-  // Show/hide V1-only columns (pass, judge_model)
+  // Show/hide V1-only columns (pass, judge_score, judge_model)
   const v1Cols = document.querySelectorAll(".col-v1");
   v1Cols.forEach((el) => (el.style.display = v === "v1" ? "" : "none"));
   // Show correct scoring panel
   document.getElementById("scoring-v0").style.display = v === "v0" ? "" : "none";
   document.getElementById("scoring-v1").style.display = v === "v1" ? "" : "none";
   // colspan adjustment
-  const emptyColspan = v === "v1" ? 10 : 8;
+  const emptyColspan = v === "v1" ? 11 : 8;
   document.querySelectorAll(".empty-colspan").forEach((el) => {
     el.setAttribute("colspan", emptyColspan);
   });
@@ -89,12 +89,13 @@ function sorted(data) {
  *   score = clamp(0, 100 − iterations×5 − duration×0.5 − tokens×0.0001, 100)
  *
  * V1: weighted average of three domains (0–100 each):
- *   quality = judge score (pre-computed in result-v1.json)
+ *   quality = raw judge_score from result-v1.json
  *   speed   = 100 / (1 + duration_secs / 60)     half-life 60 s
  *   cost    = 100 / (1 + tokens_used  / 20000)   half-life 20k tokens
  *   score   = quality×0.6 + speed×0.2 + cost×0.2
  *
- * If the entry already carries a pre-computed `score`, that value is used directly.
+ * result-v1.json intentionally stores only raw judge_score; this function computes
+ * the frontend display score.
  */
 function calcScore(d) {
   if (currentVersion === "v0") {
@@ -104,11 +105,9 @@ function calcScore(d) {
     const tokPenalty  = (d.tokens_used ?? 0) * 0.0001;
     return Math.max(0, Math.min(100, 100 - iterPenalty - durPenalty - tokPenalty));
   }
-  // V1 — use pre-computed score when present
-  if (typeof d.score === "number") return d.score;
-  // Fallback: compute from raw fields
   if (d.pass === false) return 0;
-  const quality  = 100; // assume full quality if no judge score recorded
+  const quality  = d.judge_score ?? d.score ?? 0; // d.score fallback supports older V1 files
+  if (quality === 0) return 0;
   const duration = d.duration_secs ?? 0;
   const tokens   = d.tokens_used   ?? 0;
   const speed = 100 / (1 + duration / 60);
@@ -139,6 +138,11 @@ function passCell(d) {
 function judgeCell(d) {
   const val = d.judge_model ?? "—";
   return `<td class="model col-v1" title="${esc(val)}">${esc(val)}</td>`;
+}
+
+function judgeScoreCell(d) {
+  const val = d.judge_score ?? d.score ?? null;
+  return `<td class="num col-v1">${val != null ? Number(val).toFixed(1) : "—"}</td>`;
 }
 
 // ---------- utils ----------
@@ -288,7 +292,7 @@ function render() {
 
   const tbody = document.getElementById("tbody");
   if (data.length === 0) {
-    const cols = currentVersion === "v1" ? 10 : 8;
+    const cols = currentVersion === "v1" ? 11 : 8;
     tbody.innerHTML = `<tr><td colspan="${cols}" class="empty">No results match the current filters.</td></tr>`;
     return;
   }
@@ -296,7 +300,7 @@ function render() {
   tbody.innerHTML = data
     .map((d) => {
       const v1cols = currentVersion === "v1"
-        ? `${passCell(d)}${judgeCell(d)}`
+        ? `${passCell(d)}${judgeScoreCell(d)}${judgeCell(d)}`
         : "";
       return `
       <tr>

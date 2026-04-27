@@ -10,14 +10,21 @@ import { logger } from '../utils/logger.js';
 /**
  * V1 summary entry — includes pass/fail, composite score, and judge model.
  */
+/**
+ * V1 summary entry written to result-v1.json.
+ *
+ * Stores the raw judge_score (0–100 from LLM); the composite display score
+ * (quality×0.6 + speed×0.2 + cost×0.2) is computed on the fly by the frontend.
+ */
 export interface SummaryEntry {
   task_id: string;
   agent_version: string;
   model_name: string;
   timestamp: string;
   pass: boolean;
-  score: number;
-  /** LLM that acted as judge. null = deterministic verify.py only. */
+  /** Raw 0–100 score from the LLM judge. null when no judge ran. */
+  judge_score: number | null;
+  /** LLM that acted as judge. null = no judge ran. */
   judge_model: string | null;
   iterations: number;
   duration_secs: number;
@@ -33,7 +40,7 @@ function toEntry(result: BenchmarkResult): SummaryEntry {
     model_name: result.model_name || '',
     timestamp: result.timestamp,
     pass: result.success,
-    score: result.score,
+    judge_score: result.judge_score ?? null,
     judge_model: result.judge_model ?? null,
     iterations: result.iterations,
     duration_secs: parseFloat(result.duration_secs.toFixed(2)),

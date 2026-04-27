@@ -53,7 +53,7 @@ export async function writeCSV(results: BenchmarkResult[], outputPath: string): 
     'model_name',
     'timestamp',
     'pass',
-    'score',
+    'judge_score',
     'judge_model',
     'iterations',
     'duration_secs',
@@ -67,7 +67,7 @@ export async function writeCSV(results: BenchmarkResult[], outputPath: string): 
     model_name: result.model_name || '',
     timestamp: result.timestamp,
     pass: result.success,
-    score: result.score,
+    judge_score: result.judge_score ?? '',
     judge_model: result.judge_model || '',
     iterations: result.iterations,
     duration_secs: result.duration_secs.toFixed(2),
@@ -118,7 +118,7 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
       'model_name',
       'timestamp',
       'pass',
-      'score',
+      'judge_score',
       'judge_model',
       'iterations',
       'duration_secs',
@@ -132,7 +132,7 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
       model_name: result.model_name || '',
       timestamp: result.timestamp,
       pass: result.success,
-      score: result.score,
+      judge_score: result.judge_score ?? '',
       judge_model: result.judge_model || '',
       iterations: result.iterations,
       duration_secs: result.duration_secs.toFixed(2),
@@ -178,5 +178,4 @@ export async function appendResultToCSV(result: BenchmarkResult, outputPath: str
     // Don't throw - CSV append is best-effort
   }
 }
-
 

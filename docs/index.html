@@ -85,7 +85,7 @@
       <div class="formula-wrap">
         <div class="formula">
           <span class="comment">// Three domains combined as a weighted average</span><br>
-          quality = judge_model(<span class="keyword">judge_prompt</span> + agent_output) &nbsp;<span class="comment">// 0–100</span><br>
+          quality = judge_score &nbsp;<span class="comment">// raw 0–100 score stored in result-v1.json</span><br>
           speed &nbsp;&nbsp;= <span class="num">100</span> / (<span class="num">1</span> + duration_secs / <span class="num">60</span>) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// half-life 60 s</span><br>
           cost &nbsp;&nbsp;&nbsp;= <span class="num">100</span> / (<span class="num">1</span> + tokens_used &nbsp;/ <span class="num">20000</span>) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment">// half-life 20k tok</span><br><br>
           <span class="keyword">Score</span> = quality × <span class="num">0.6</span> + speed × <span class="num">0.2</span> + cost × <span class="num">0.2</span><br>
@@ -98,7 +98,7 @@
           <tbody>
             <tr>
               <td>quality</td><td>60%</td>
-              <td>LLM judge rates correctness 0–100; 0 means task failed</td>
+              <td>Raw judge_score from the LLM judge; 0 means task failed</td>
             </tr>
             <tr>
               <td>speed</td><td>20%</td>
@@ -126,6 +126,7 @@
             <th data-col="model_name">Model <span class="sort-icon">↕</span></th>
             <!-- V1-only columns -->
             <th data-col="pass" class="col-v1">Pass <span class="sort-icon">↕</span></th>
+            <th data-col="judge_score" class="col-v1 num">Judge Score <span class="sort-icon">↕</span></th>
             <th data-col="judge_model" class="col-v1">Judge Model <span class="sort-icon">↕</span></th>
             <!-- shared columns -->
             <th data-col="iterations" class="num">Iterations <span class="sort-icon">↕</span></th>
